@@ -130,7 +130,7 @@ export default function ProductView({ product }: { product: Product }) {
 
       <div className="grid md:grid-cols-2 gap-8 lg:gap-16">
         {/* Gallery */}
-        <div>
+        <div className="min-w-0">
           <div className="aspect-square md:aspect-[3/4] bg-neutral-100 mb-3 overflow-hidden relative group">
             {product.images[activeImage] && (
               <img
@@ -162,7 +162,7 @@ export default function ProductView({ product }: { product: Product }) {
         </div>
 
         {/* Details */}
-        <div>
+        <div className="min-w-0">
           <p className="text-xs uppercase tracking-widest text-neutral-500">
             {product.category}
           </p>
