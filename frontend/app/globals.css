@@ -1,0 +1,41 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Cormorant+Garamond:wght@400;500;600&display=swap");
+
+:root {
+  --bg: #ffffff;
+  --ink: #1a1a1a;
+}
+
+html, body {
+  background: var(--bg);
+  color: var(--ink);
+  font-feature-settings: "ss01", "cv11";
+}
+
+body {
+  font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Reference-style minimal scrollbar */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-thumb { background: #d4d4d4; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #a3a3a3; }
+
+/* Grid hover image swap */
+.product-card .img-secondary {
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+.product-card:hover .img-secondary { opacity: 1; }
+.product-card:hover .img-primary { opacity: 0; }
+
+/* Filter accordion */
+.filter-section summary { cursor: pointer; list-style: none; }
+.filter-section summary::-webkit-details-marker { display: none; }
+
+/* Brand mark with proper ® */
+.brand-mark sup { font-size: 0.55em; vertical-align: super; }

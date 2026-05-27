@@ -1,0 +1,33 @@
+# --- Python / Django ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+*.sqlite3
+db.sqlite3
+backend/staticfiles/
+backend/media/
+backend/logs/
+*.log
+
+# --- Secrets / environment ---
+.env
+.env.*
+!.env.example
+!.env.production.example
+!.env.local.example
+
+# --- Node / Next.js ---
+node_modules/
+.next/
+out/
+npm-debug.log*
+yarn-error.log*
+
+# --- OS / editor ---
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/
