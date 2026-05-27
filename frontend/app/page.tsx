@@ -40,11 +40,13 @@ export default async function HomePage() {
     getBanners(),
   ]);
   const primaryCategories = categories.slice(0, 6);
+  const heroBanners = banners.filter((b: any) => b.kind !== "split");
+  const splitBanners = banners.filter((b: any) => b.kind === "split").slice(0, 2);
 
   return (
     <>
       {/* Hero carousel — admin-managed banners */}
-      <BannerCarousel banners={banners} />
+      <BannerCarousel banners={heroBanners} />
 
       {/* USP / trust bar */}
       <section className="border-b border-neutral-200">
@@ -127,48 +129,84 @@ export default async function HomePage() {
       {/* Editorial split banner — Festive edit */}
       <section className="py-12 md:py-16">
         <div className="max-w-page mx-auto px-4 md:px-8 grid md:grid-cols-2 gap-3 md:gap-5">
-          <Link
-            href="/collections/lehenga"
-            className="relative aspect-[4/3] overflow-hidden group"
-          >
-            <img
-              src="https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?w=1600"
-              alt="Bridal lehenga edit"
-              className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-              loading="lazy"
-            />
-            <div className="absolute inset-0 bg-black/30" />
-            <div className="absolute inset-0 flex flex-col justify-end p-6 md:p-10 text-white">
-              <p className="text-xs uppercase tracking-widest">Wedding edit</p>
-              <h3 className="font-serif text-3xl md:text-4xl mt-2">
-                For the days that matter
-              </h3>
-              <span className="mt-4 inline-block w-fit border-b border-white pb-1 text-sm">
-                Shop lehengas →
-              </span>
-            </div>
-          </Link>
-          <Link
-            href="/collections/co-ord-set"
-            className="relative aspect-[4/3] overflow-hidden group"
-          >
-            <img
-              src="https://images.unsplash.com/photo-1622445275576-721325763afe?w=1600"
-              alt="Co-ord sets edit"
-              className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-              loading="lazy"
-            />
-            <div className="absolute inset-0 bg-black/30" />
-            <div className="absolute inset-0 flex flex-col justify-end p-6 md:p-10 text-white">
-              <p className="text-xs uppercase tracking-widest">Co-ord edit</p>
-              <h3 className="font-serif text-3xl md:text-4xl mt-2">
-                Effortless from sun-up to sun-down
-              </h3>
-              <span className="mt-4 inline-block w-fit border-b border-white pb-1 text-sm">
-                Shop co-ord sets →
-              </span>
-            </div>
-          </Link>
+          {splitBanners.length > 0 ? (
+            splitBanners.map((banner: any) => (
+              <Link
+                key={banner.id}
+                href={banner.cta_url || "#"}
+                className="relative aspect-[4/3] overflow-hidden group"
+              >
+                <img
+                  src={banner.src}
+                  alt={banner.image_alt || banner.headline}
+                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  loading="lazy"
+                />
+                <div
+                  className="absolute inset-0"
+                  style={{ backgroundColor: `rgba(0, 0, 0, ${(banner.overlay_opacity || 30) / 100})` }}
+                />
+                <div className="absolute inset-0 flex flex-col justify-end p-6 md:p-10 text-white">
+                  {banner.eyebrow && (
+                    <p className="text-xs uppercase tracking-widest">{banner.eyebrow}</p>
+                  )}
+                  <h3 className="font-serif text-3xl md:text-4xl mt-2">
+                    {banner.headline}
+                  </h3>
+                  {banner.cta_label && (
+                    <span className="mt-4 inline-block w-fit border-b border-white pb-1 text-sm">
+                      {banner.cta_label} &rarr;
+                    </span>
+                  )}
+                </div>
+              </Link>
+            ))
+          ) : (
+            <>
+              <Link
+                href="/collections/lehenga"
+                className="relative aspect-[4/3] overflow-hidden group"
+              >
+                <img
+                  src="https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?w=1600"
+                  alt="Bridal lehenga edit"
+                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  loading="lazy"
+                />
+                <div className="absolute inset-0 bg-black/30" />
+                <div className="absolute inset-0 flex flex-col justify-end p-6 md:p-10 text-white">
+                  <p className="text-xs uppercase tracking-widest">Wedding edit</p>
+                  <h3 className="font-serif text-3xl md:text-4xl mt-2">
+                    For the days that matter
+                  </h3>
+                  <span className="mt-4 inline-block w-fit border-b border-white pb-1 text-sm">
+                    Shop lehengas →
+                  </span>
+                </div>
+              </Link>
+              <Link
+                href="/collections/co-ord-set"
+                className="relative aspect-[4/3] overflow-hidden group"
+              >
+                <img
+                  src="https://images.unsplash.com/photo-1622445275576-721325763afe?w=1600"
+                  alt="Co-ord sets edit"
+                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  loading="lazy"
+                />
+                <div className="absolute inset-0 bg-black/30" />
+                <div className="absolute inset-0 flex flex-col justify-end p-6 md:p-10 text-white">
+                  <p className="text-xs uppercase tracking-widest">Co-ord edit</p>
+                  <h3 className="font-serif text-3xl md:text-4xl mt-2">
+                    Effortless from sun-up to sun-down
+                  </h3>
+                  <span className="mt-4 inline-block w-fit border-b border-white pb-1 text-sm">
+                    Shop co-ord sets →
+                  </span>
+                </div>
+              </Link>
+            </>
+          )}
         </div>
       </section>
 

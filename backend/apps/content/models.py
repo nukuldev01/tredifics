@@ -83,10 +83,12 @@ class Banner(models.Model):
     KIND_BRAND_STORY = "brand_story"
     KIND_CATEGORY = "category"
     KIND_PROMO = "promo"
+    KIND_SPLIT = "split"
     KIND_CHOICES = [
         (KIND_BRAND_STORY, "Brand story"),
         (KIND_CATEGORY, "Category"),
         (KIND_PROMO, "Promo"),
+        (KIND_SPLIT, "Split Promo (Middle)"),
     ]
 
     kind = models.CharField(max_length=20, choices=KIND_CHOICES, default=KIND_PROMO)
