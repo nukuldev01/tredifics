@@ -2,8 +2,9 @@
 import { XCircle } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 
-export default function OrderFailed() {
+function FailedContent() {
   const sp = useSearchParams();
   const id = sp.get("id");
   return (
@@ -31,5 +32,13 @@ export default function OrderFailed() {
         </Link>
       </div>
     </div>
+  );
+}
+
+export default function OrderFailed() {
+  return (
+    <Suspense fallback={<div className="py-20 text-center">Loading...</div>}>
+      <FailedContent />
+    </Suspense>
   );
 }
