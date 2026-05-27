@@ -131,7 +131,7 @@ export default function ProductView({ product }: { product: Product }) {
       <div className="grid md:grid-cols-2 gap-8 lg:gap-16">
         {/* Gallery */}
         <div>
-          <div className="aspect-[3/4] bg-neutral-100 mb-3 overflow-hidden relative group">
+          <div className="aspect-square md:aspect-[3/4] bg-neutral-100 mb-3 overflow-hidden relative group">
             {product.images[activeImage] && (
               <img
                 src={product.images[activeImage].src}
