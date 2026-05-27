@@ -1,11 +1,18 @@
 import "./globals.css";
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import WhatsAppButton from "@/components/WhatsAppButton";
 import ReviewPopup from "@/components/ReviewPopup";
 import CountryDetector from "@/components/CountryDetector";
 import { BRAND } from "@/lib/brand";
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  themeColor: "#ffffff",
+};
 
 export const metadata: Metadata = {
   title: {
