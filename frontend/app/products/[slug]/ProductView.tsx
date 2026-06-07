@@ -279,23 +279,42 @@ export default function ProductView({ product }: { product: Product }) {
               <div className="mt-2 flex flex-wrap gap-2">
                 {allColors.map((c) => {
                   const variantImg = product.variants.find((v) => v.color.name === c.name && v.src)?.src;
+                  if (variantImg) {
+                    return (
+                      <button
+                        key={c.id}
+                        onClick={() => setSelectedColor(c.name)}
+                        className={`flex flex-col items-center border transition-all overflow-hidden flex-shrink-0 ${
+                          c.name === selectedColor
+                            ? "border-ink ring-1 ring-ink"
+                            : "border-neutral-200 hover:border-neutral-400"
+                        }`}
+                        style={{ width: "70px" }}
+                        aria-label={c.name}
+                      >
+                        <div className="w-full h-[85px] bg-neutral-100">
+                          <img src={variantImg} alt={c.name} className="w-full h-full object-cover" />
+                        </div>
+                        <div className="w-full py-1.5 bg-white text-center text-[11px] text-neutral-600 font-medium border-t border-neutral-100">
+                          {c.name}
+                        </div>
+                      </button>
+                    );
+                  }
+
                   return (
                     <button
                       key={c.id}
                       onClick={() => setSelectedColor(c.name)}
-                      className={`w-[42px] h-[42px] rounded-full border p-0.5 overflow-hidden transition-all ${
+                      className={`w-[42px] h-[42px] rounded-full border p-0.5 overflow-hidden transition-all flex-shrink-0 self-center ${
                         c.name === selectedColor
                           ? "ring-1 ring-ink border-ink"
                           : "border-neutral-300 hover:border-ink"
                       }`}
                       aria-label={c.name}
                     >
-                      <div className="w-full h-full rounded-full overflow-hidden bg-neutral-100 flex items-center justify-center">
-                        {variantImg ? (
-                          <img src={variantImg} alt={c.name} className="w-full h-full object-cover" />
-                        ) : (
-                          <span className="w-full h-full block" style={{ backgroundColor: c.hex_code }} />
-                        )}
+                      <div className="w-full h-full rounded-full overflow-hidden bg-neutral-100">
+                        <span className="w-full h-full block" style={{ backgroundColor: c.hex_code }} />
                       </div>
                     </button>
                   );
