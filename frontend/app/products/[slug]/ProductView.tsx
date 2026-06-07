@@ -3,7 +3,8 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
-  Star, Truck, Shield, RotateCcw, Ruler, Plus, Minus, Banknote, RefreshCcw, Timer
+  Star, Truck, Shield, RotateCcw, Ruler, Plus, Minus, Banknote, RefreshCcw, Timer,
+  Heart, Pencil, ShieldCheck, MessageCircleHeart, Leaf, CheckCircle2, ThumbsUp, ThumbsDown
 } from "lucide-react";
 import type { Product, ProductVariant } from "@/lib/types";
 import { useCart } from "@/lib/cart";
@@ -49,12 +50,16 @@ export default function ProductView({ product }: { product: Product }) {
   }, [product.slug]);
 
   const [activeImage, setActiveImage] = useState(0);
+  const [zoomPos, setZoomPos] = useState({ x: 0, y: 0 });
+  const [showZoom, setShowZoom] = useState(false);
   const [showSizeChart, setShowSizeChart] = useState(false);
   const [tab, setTab] = useState<"desc" | "details" | "shipping">("desc");
   const [qty, setQty] = useState(1);
   const [feedback, setFeedback] = useState("");
   const [reviewOpen, setReviewOpen] = useState(false);
   const [reviewsKey, setReviewsKey] = useState(0); // bump to force soft refresh
+  const [reviewSort, setReviewSort] = useState("Most Recent");
+  const [showAllReviews, setShowAllReviews] = useState(false);
 
   const variant: ProductVariant | undefined = product.variants.find(
     (v) => v.color.name === selectedColor && v.size === selectedSize
@@ -116,6 +121,26 @@ export default function ProductView({ product }: { product: Product }) {
   const fmt = (d: Date) => d.toLocaleDateString(undefined, { day: "numeric", month: "short" });
   const deliveryRange = `${fmt(min)} – ${fmt(max)}`;
 
+  // Reviews calculations
+  const totalReviews = product.reviews.length;
+  const ratingCounts = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+  product.reviews.forEach(r => {
+    if (r.rating >= 1 && r.rating <= 5) {
+      ratingCounts[r.rating as keyof typeof ratingCounts]++;
+    }
+  });
+
+  const sortedReviews = [...product.reviews].sort((a, b) => {
+    if (reviewSort === "Most Recent") return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    if (reviewSort === "Oldest") return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+    if (reviewSort === "Highest Rating") return b.rating - a.rating;
+    if (reviewSort === "Lowest Rating") return a.rating - b.rating;
+    if (reviewSort === "Most images") return (b.media?.length || 0) - (a.media?.length || 0);
+    return 0;
+  });
+
+  const displayedReviews = showAllReviews ? sortedReviews : sortedReviews.slice(0, 5);
+
   return (
     <div className="max-w-page mx-auto px-4 md:px-8 py-6 md:py-8">
       <div className="mb-6">
@@ -132,37 +157,40 @@ export default function ProductView({ product }: { product: Product }) {
         {/* Gallery */}
         <div className="min-w-0">
           <div 
-            className="aspect-square md:aspect-[3/4] bg-neutral-100 mb-3 overflow-hidden relative group cursor-crosshair"
+            className="aspect-square md:aspect-[3/4] bg-neutral-100 mb-3 relative group cursor-crosshair"
             onMouseMove={(e) => {
               const rect = e.currentTarget.getBoundingClientRect();
               const x = ((e.clientX - rect.left) / rect.width) * 100;
               const y = ((e.clientY - rect.top) / rect.height) * 100;
-              const img = e.currentTarget.querySelector('img');
-              if (img) {
-                img.style.transformOrigin = `${x}% ${y}%`;
-                img.style.transform = 'scale(1.5)';
-              }
+              setZoomPos({ x, y });
+              setShowZoom(true);
             }}
-            onMouseLeave={(e) => {
-              const img = e.currentTarget.querySelector('img');
-              if (img) {
-                img.style.transformOrigin = 'center center';
-                img.style.transform = 'scale(1)';
-              }
-            }}
+            onMouseLeave={() => setShowZoom(false)}
           >
             {product.images[activeImage] && (
               <img
                 src={product.images[activeImage].src}
                 alt={product.images[activeImage].alt || product.name}
-                className="w-full h-full object-cover transition-transform duration-200 ease-out"
+                className="w-full h-full object-cover"
               />
             )}
-            <div className="absolute top-3 right-3">
-              <span className="bg-white/95 rounded-full p-2 shadow-sm">
+            <div className="absolute top-3 right-3 z-10">
+              <span className="bg-white/95 rounded-full p-2 shadow-sm inline-block">
                 <WishlistButton productId={product.id} size={18} />
               </span>
             </div>
+            {/* Zoom Portal */}
+            {showZoom && product.images[activeImage] && (
+              <div 
+                className="hidden md:block absolute top-0 left-full ml-6 w-[500px] h-full bg-white z-50 shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-neutral-200 pointer-events-none"
+                style={{
+                  backgroundImage: `url(${product.images[activeImage].src})`,
+                  backgroundPosition: `${zoomPos.x}% ${zoomPos.y}%`,
+                  backgroundSize: "250%",
+                  backgroundRepeat: "no-repeat"
+                }}
+              />
+            )}
           </div>
           <div className="flex gap-2 overflow-x-auto">
             {product.images.map((img, i) => (
@@ -440,68 +468,176 @@ export default function ProductView({ product }: { product: Product }) {
 
       {/* Reviews */}
       <section className="border-t border-neutral-200 mt-12 pt-10" key={reviewsKey}>
-        <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
+        {/* Title area */}
+        <div className="flex items-center justify-between mb-8 flex-wrap gap-4">
           <div>
-            <h2 className="font-serif text-2xl md:text-3xl">Customer Reviews</h2>
-            {product.review_count > 0 && (
-              <p className="text-sm text-neutral-500 mt-1">
-                {product.average_rating}★ · {product.review_count} reviews
-              </p>
-            )}
+            <h2 className="font-serif text-2xl md:text-3xl text-neutral-800">Customer Reviews</h2>
+            <div className="flex items-center gap-1 text-sm text-neutral-500 mt-1">
+              <span>Real feedback from real customers</span>
+              <Heart size={14} className="text-rust" />
+            </div>
           </div>
           <button
             onClick={() => setReviewOpen(true)}
-            className="border border-ink text-ink px-5 py-2.5 text-sm uppercase tracking-wider hover:bg-ink hover:text-white transition-colors"
+            className="bg-[#b38264] text-white px-5 py-2.5 text-sm uppercase tracking-wider font-medium hover:bg-[#a17255] transition-colors flex items-center gap-2 rounded shadow-sm"
           >
-            Add your review
+            <Pencil size={16} /> WRITE A REVIEW
           </button>
         </div>
 
-        {product.reviews.length === 0 ? (
+        {totalReviews === 0 ? (
           <p className="text-sm text-neutral-500">
             No reviews yet — be the first to share your experience.
           </p>
         ) : (
-          <div className="grid md:grid-cols-2 gap-6">
-            {product.reviews.map((r) => (
-              <article key={r.id} className="border border-neutral-200 p-5">
-                <div className="flex items-center gap-2 mb-1">
-                  <div className="flex">
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <Star key={i} size={12}
-                        className={i < r.rating ? "fill-[#fbbc04] text-[#fbbc04]" : "text-neutral-300"} />
-                    ))}
-                  </div>
-                  {r.title && <span className="text-xs font-medium">{r.title}</span>}
+          <>
+            {/* Aggregate box */}
+            <div className="border border-[#f4f1ee] rounded-xl p-6 md:p-8 bg-[#faf9f8] grid md:grid-cols-3 gap-8 mb-10">
+              {/* Left: 4.0 */}
+              <div className="flex flex-col items-center justify-center border-b md:border-b-0 md:border-r border-neutral-200 pb-6 md:pb-0">
+                <div className="text-6xl font-serif text-neutral-800 mb-3">{product.average_rating.toFixed(1)}</div>
+                <div className="flex mb-2">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <Star key={i} size={20} className={i < Math.round(product.average_rating) ? "fill-[#fbbc04] text-[#fbbc04]" : "text-neutral-300"} />
+                  ))}
                 </div>
-                <p className="text-sm text-neutral-700">{r.body}</p>
-                {r.media && r.media.length > 0 && (
-                  <div className="mt-3 flex gap-2 overflow-x-auto">
-                    {r.media.map((m) =>
-                      m.kind === "video" ? (
-                        <video
-                          key={m.id}
-                          src={m.src}
-                          controls
-                          className="h-24 w-24 object-cover bg-neutral-100"
-                        />
-                      ) : (
-                        <img
-                          key={m.id}
-                          src={m.src}
-                          alt=""
-                          className="h-24 w-24 object-cover bg-neutral-100"
-                        />
-                      )
-                    )}
+                <span className="text-sm text-neutral-500">Based on {totalReviews} review{totalReviews !== 1 && 's'}</span>
+              </div>
+
+              {/* Middle: Bars */}
+              <div className="flex flex-col justify-center space-y-3 border-b md:border-b-0 md:border-r border-neutral-200 pb-6 md:pb-0 pr-0 md:pr-8">
+                {[5, 4, 3, 2, 1].map((star) => (
+                  <div key={star} className="flex items-center gap-3">
+                    <span className="text-sm font-medium w-2">{star}</span>
+                    <Star size={14} className="fill-[#fbbc04] text-[#fbbc04]" />
+                    <div className="flex-1 h-2 bg-[#f0e9e4] rounded-full overflow-hidden">
+                      <div className="h-full bg-[#fbbc04] rounded-full" style={{ width: `${totalReviews ? (ratingCounts[star as keyof typeof ratingCounts] / totalReviews) * 100 : 0}%` }} />
+                    </div>
                   </div>
-                )}
-                <p className="text-xs text-neutral-500 mt-3">
-                  — {r.name} · <span suppressHydrationWarning>{new Date(r.created_at).toLocaleDateString()}</span>
-                </p>
-              </article>
-            ))}
-          </div>
+                ))}
+              </div>
+
+              {/* Right: Badges */}
+              <div className="flex flex-col justify-center space-y-6 pl-0 md:pl-4">
+                <div className="flex items-start gap-3">
+                  <ShieldCheck size={26} className="text-[#b38264] mt-0.5" strokeWidth={1.5} />
+                  <div>
+                    <div className="text-sm font-semibold text-neutral-800">Verified Purchases</div>
+                    <div className="text-xs text-neutral-500 mt-0.5">All reviews are from verified buyers</div>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <MessageCircleHeart size={26} className="text-[#b38264] mt-0.5" strokeWidth={1.5} />
+                  <div>
+                    <div className="text-sm font-semibold text-neutral-800">Helpful & Honest</div>
+                    <div className="text-xs text-neutral-500 mt-0.5">We value authentic feedback</div>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <Leaf size={26} className="text-[#b38264] mt-0.5" strokeWidth={1.5} />
+                  <div>
+                    <div className="text-sm font-semibold text-neutral-800">Better Together</div>
+                    <div className="text-xs text-neutral-500 mt-0.5">Your reviews help others shop better</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Sorting Header */}
+            <div className="flex flex-wrap items-center justify-between border-b border-neutral-200 pb-4 mb-6">
+              <div className="font-medium text-lg text-neutral-800">{totalReviews} Review{totalReviews !== 1 && 's'}</div>
+              <div className="flex items-center gap-2 text-sm text-neutral-600">
+                <span className="hidden sm:inline">Sort by:</span>
+                <select 
+                  value={reviewSort} 
+                  onChange={e => setReviewSort(e.target.value)}
+                  className="border border-neutral-300 rounded-md px-3 py-1.5 outline-none focus:border-ink bg-white cursor-pointer"
+                >
+                  <option>Most Recent</option>
+                  <option>Oldest</option>
+                  <option>Highest Rating</option>
+                  <option>Lowest Rating</option>
+                  <option>Most Helpful</option>
+                  <option>Most images</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Reviews List */}
+            <div className="space-y-8">
+              {displayedReviews.map((r) => (
+                <article key={r.id} className="border-b border-neutral-100 pb-8 last:border-0 last:pb-0">
+                  {/* Stars and date */}
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex">
+                      {Array.from({ length: 5 }).map((_, i) => (
+                        <Star key={i} size={14}
+                          className={i < r.rating ? "fill-[#fbbc04] text-[#fbbc04]" : "text-neutral-200"} />
+                      ))}
+                    </div>
+                    <div className="text-xs text-neutral-400" suppressHydrationWarning>
+                      {new Date(r.created_at).toLocaleDateString(undefined, { day: "numeric", month: "long", year: "numeric" })}
+                    </div>
+                  </div>
+                  
+                  {/* User info */}
+                  <div className="flex items-center gap-2 mb-4">
+                    <span className="font-medium text-sm text-neutral-800">{r.name}</span>
+                    <span className="flex items-center gap-1 text-[10px] uppercase tracking-wide text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full font-semibold border border-emerald-100">
+                      <CheckCircle2 size={12} /> Verified Buyer
+                    </span>
+                  </div>
+
+                  {/* Review text */}
+                  {r.title && <h4 className="font-semibold text-[15px] mb-2 text-neutral-900">{r.title}</h4>}
+                  <p className="text-sm text-neutral-700 mb-4 leading-relaxed">{r.body}</p>
+
+                  {/* Tags - static as per requirements */}
+                  <div className="flex flex-wrap gap-2 mb-5">
+                    <span className="text-xs border border-neutral-200 px-3 py-1 rounded-full text-neutral-600 bg-neutral-50 shadow-sm">Great Quality</span>
+                    <span className="text-xs border border-neutral-200 px-3 py-1 rounded-full text-neutral-600 bg-neutral-50 shadow-sm">Beautiful Color</span>
+                    <span className="text-xs border border-neutral-200 px-3 py-1 rounded-full text-neutral-600 bg-neutral-50 shadow-sm">Soft Fabric</span>
+                  </div>
+
+                  {/* Images */}
+                  {r.media && r.media.length > 0 && (
+                    <div className="mt-3 flex gap-3 overflow-x-auto pb-2">
+                      {r.media.map((m) =>
+                        m.kind === "video" ? (
+                          <video key={m.id} src={m.src} controls className="h-28 w-28 object-cover bg-neutral-100 rounded-lg shadow-sm border border-neutral-200 flex-shrink-0" />
+                        ) : (
+                          <img key={m.id} src={m.src} alt="" className="h-28 w-28 object-cover bg-neutral-100 rounded-lg shadow-sm border border-neutral-200 flex-shrink-0" />
+                        )
+                      )}
+                    </div>
+                  )}
+
+                  {/* Helpful buttons */}
+                  <div className="flex items-center gap-4 mt-5 pt-5 border-t border-neutral-50">
+                    <span className="text-sm text-neutral-500 font-medium">Was this review helpful?</span>
+                    <button className="flex items-center gap-1.5 border border-neutral-200 rounded-md px-3 py-1.5 text-xs font-medium text-neutral-600 hover:bg-neutral-50 hover:border-neutral-300 transition-colors bg-white">
+                      <ThumbsUp size={14} /> Helpful (0)
+                    </button>
+                    <button className="flex items-center gap-1.5 border border-neutral-200 rounded-md px-3 py-1.5 text-xs font-medium text-neutral-600 hover:bg-neutral-50 hover:border-neutral-300 transition-colors bg-white">
+                      <ThumbsDown size={14} /> Not Helpful (0)
+                    </button>
+                  </div>
+                </article>
+              ))}
+            </div>
+
+            {/* See all button */}
+            {!showAllReviews && sortedReviews.length > 5 && (
+              <div className="mt-10 text-center">
+                <button 
+                  onClick={() => setShowAllReviews(true)} 
+                  className="border border-ink text-ink px-10 py-3 text-sm font-medium hover:bg-ink hover:text-white transition-colors uppercase tracking-widest rounded-md"
+                >
+                  See all reviews
+                </button>
+              </div>
+            )}
+          </>
         )}
       </section>
 
