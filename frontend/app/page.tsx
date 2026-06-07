@@ -52,16 +52,16 @@ export default async function HomePage() {
       <section className="border-b border-neutral-200">
         <div className="max-w-page mx-auto px-4 md:px-8 grid grid-cols-2 md:grid-cols-4 gap-6 py-8">
           {[
-            { Icon: RefreshCcw, h: "7 Day Easy Exchange", s: "" },
-            { Icon: Truck, h: "Free Shipping", s: "" },
-            { Icon: Banknote, h: "Cash on Delivery", s: "" },
-            { Icon: Timer, h: "Express Shipping", s: "" },
+            { Icon: Globe, h: "Worldwide Shipping", s: "India, US, UK, Canada" },
+            { Icon: ShieldCheck, h: "Secure Checkout", s: "Razorpay-secured" },
+            { Icon: Truck, h: "Express Delivery", s: "3–6 day express option" },
+            { Icon: RotateCcw, h: "Easy Returns", s: "30-day hassle-free" },
           ].map(({ Icon, h, s }) => (
-            <div key={h} className="flex flex-col items-center text-center gap-2">
-              <Icon size={36} strokeWidth={1.5} className="text-[#f1865b]" />
+            <div key={h} className="flex items-center gap-3">
+              <Icon size={26} strokeWidth={1.5} />
               <div>
-                <h3 className="text-sm font-semibold text-neutral-800">{h}</h3>
-                {s && <p className="text-xs text-neutral-500 mt-0.5">{s}</p>}
+                <h3 className="text-sm font-medium">{h}</h3>
+                <p className="text-xs text-neutral-500">{s}</p>
               </div>
             </div>
           ))}

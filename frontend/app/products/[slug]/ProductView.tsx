@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
-  Star, Truck, Shield, RotateCcw, Ruler, Plus, Minus, Banknote,
+  Star, Truck, Shield, RotateCcw, Ruler, Plus, Minus, Banknote, RefreshCcw, Timer
 } from "lucide-react";
 import type { Product, ProductVariant } from "@/lib/types";
 import { useCart } from "@/lib/cart";
@@ -131,12 +131,31 @@ export default function ProductView({ product }: { product: Product }) {
       <div className="grid md:grid-cols-2 gap-8 lg:gap-16">
         {/* Gallery */}
         <div className="min-w-0">
-          <div className="aspect-square md:aspect-[3/4] bg-neutral-100 mb-3 overflow-hidden relative group">
+          <div 
+            className="aspect-square md:aspect-[3/4] bg-neutral-100 mb-3 overflow-hidden relative group cursor-crosshair"
+            onMouseMove={(e) => {
+              const rect = e.currentTarget.getBoundingClientRect();
+              const x = ((e.clientX - rect.left) / rect.width) * 100;
+              const y = ((e.clientY - rect.top) / rect.height) * 100;
+              const img = e.currentTarget.querySelector('img');
+              if (img) {
+                img.style.transformOrigin = `${x}% ${y}%`;
+                img.style.transform = 'scale(1.5)';
+              }
+            }}
+            onMouseLeave={(e) => {
+              const img = e.currentTarget.querySelector('img');
+              if (img) {
+                img.style.transformOrigin = 'center center';
+                img.style.transform = 'scale(1)';
+              }
+            }}
+          >
             {product.images[activeImage] && (
               <img
                 src={product.images[activeImage].src}
                 alt={product.images[activeImage].alt || product.name}
-                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                className="w-full h-full object-cover transition-transform duration-200 ease-out"
               />
             )}
             <div className="absolute top-3 right-3">
@@ -349,10 +368,20 @@ export default function ProductView({ product }: { product: Product }) {
           </div>
 
           {/* Trust badges */}
-          <div className="mt-4 grid grid-cols-3 gap-4 text-xs text-neutral-600 border-y border-neutral-200 py-4">
-            <div className="flex items-center gap-2"><Truck size={16} /> Worldwide shipping</div>
-            <div className="flex items-center gap-2"><RotateCcw size={16} /> 30-day returns</div>
-            <div className="flex items-center gap-2"><Shield size={16} /> Secure checkout</div>
+          <div className="mt-6 border-y border-neutral-200 py-6">
+            <div className="grid grid-cols-4 gap-4 text-center">
+              {[
+                { Icon: RefreshCcw, h: "7 Day Easy Exchange" },
+                { Icon: Truck, h: "Free Shipping" },
+                { Icon: Banknote, h: "Cash on Delivery" },
+                { Icon: Timer, h: "Express Shipping" },
+              ].map(({ Icon, h }) => (
+                <div key={h} className="flex flex-col items-center gap-2">
+                  <Icon size={24} strokeWidth={1.5} className="text-[#f1865b]" />
+                  <span className="text-[10px] md:text-xs font-semibold leading-tight text-neutral-800">{h}</span>
+                </div>
+              ))}
+            </div>
           </div>
 
           {/* Tabs */}

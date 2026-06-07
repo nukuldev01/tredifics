@@ -46,7 +46,7 @@ export default function ProductCard({ product }: { product: ProductListItem }) {
         </div>
         
         <div className="pt-3">
-          <h3 className="text-sm md:text-base font-normal leading-snug truncate border-b border-transparent hover:border-ink inline-block transition-colors">
+          <h3 className="text-sm md:text-base font-normal leading-snug truncate border-b border-transparent hover:border-ink block transition-colors">
             {product.name}
           </h3>
           

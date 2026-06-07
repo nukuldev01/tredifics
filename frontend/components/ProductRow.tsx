@@ -52,9 +52,6 @@ export default function ProductRow({
             )}
           </div>
           <div className="flex items-center gap-3">
-            <Link href={href} className="text-sm underline">
-              View all
-            </Link>
             <div className="hidden md:flex gap-1">
               <button
                 onClick={() => scrollBy(-1)}

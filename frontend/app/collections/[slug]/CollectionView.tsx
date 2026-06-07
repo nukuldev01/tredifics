@@ -143,16 +143,39 @@ export default function CollectionView({
           Price
           <ChevronDown size={16} className="group-open:rotate-180 transition" />
         </summary>
-        <div className="pt-3 flex flex-col gap-3 pb-2">
+        <div className="pt-6 flex flex-col gap-4 pb-2 px-1">
           {facets && (
-            <input
-              type="range"
-              min={facets.min_price || 0}
-              max={facets.max_price || 10000}
-              value={maxPrice || facets.max_price || 10000}
-              onChange={(e) => setMaxPrice(e.target.value)}
-              className="w-full accent-ink cursor-pointer"
-            />
+            <div className="relative h-1 bg-neutral-200 rounded w-full mb-2">
+              <div 
+                className="absolute h-full bg-ink rounded"
+                style={{
+                  left: `${((Number(minPrice || facets.min_price || 0) - (facets.min_price || 0)) / ((facets.max_price || 1000) - (facets.min_price || 0))) * 100}%`,
+                  right: `${100 - ((Number(maxPrice || facets.max_price || 1000) - (facets.min_price || 0)) / ((facets.max_price || 1000) - (facets.min_price || 0))) * 100}%`
+                }}
+              />
+              <input
+                type="range"
+                min={facets.min_price || 0}
+                max={facets.max_price || 1000}
+                value={minPrice || facets.min_price || 0}
+                onChange={(e) => {
+                  const val = Math.min(Number(e.target.value), Number(maxPrice || facets.max_price || 1000) - 1);
+                  setMinPrice(val.toString());
+                }}
+                className="absolute w-full -top-[7px] pointer-events-none appearance-none bg-transparent [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-[18px] [&::-webkit-slider-thumb]:h-[18px] [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-ink [&::-webkit-slider-thumb]:shadow-md"
+              />
+              <input
+                type="range"
+                min={facets.min_price || 0}
+                max={facets.max_price || 1000}
+                value={maxPrice || facets.max_price || 1000}
+                onChange={(e) => {
+                  const val = Math.max(Number(e.target.value), Number(minPrice || facets.min_price || 0) + 1);
+                  setMaxPrice(val.toString());
+                }}
+                className="absolute w-full -top-[7px] pointer-events-none appearance-none bg-transparent [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-[18px] [&::-webkit-slider-thumb]:h-[18px] [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-ink [&::-webkit-slider-thumb]:shadow-md"
+              />
+            </div>
           )}
           <div className="flex gap-2">
             <input
@@ -160,22 +183,17 @@ export default function CollectionView({
               placeholder="Min"
               value={minPrice}
               onChange={(e) => setMinPrice(e.target.value)}
-              className="border border-neutral-300 px-2 py-1.5 text-xs w-1/2"
+              className="border border-neutral-300 px-2 py-1.5 text-xs w-1/2 focus:outline-none focus:border-ink"
             />
             <input
               type="number"
               placeholder="Max"
               value={maxPrice}
               onChange={(e) => setMaxPrice(e.target.value)}
-              className="border border-neutral-300 px-2 py-1.5 text-xs w-1/2"
+              className="border border-neutral-300 px-2 py-1.5 text-xs w-1/2 focus:outline-none focus:border-ink"
             />
           </div>
         </div>
-        {facets && (
-          <p className="text-[11px] text-neutral-500 mt-1">
-            From <Price amount={facets.min_price} /> to <Price amount={facets.max_price} />
-          </p>
-        )}
       </details>
 
       <button

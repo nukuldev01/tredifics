@@ -60,12 +60,10 @@ export default function BannerCarousel({
   // Auto-advance
   useEffect(() => {
     if (banners.length < 2 || paused) return;
-    timerRef.current = setInterval(() => {
+    const timer = setInterval(() => {
       setActive((i) => (i + 1) % banners.length);
     }, AUTO_ADVANCE_MS);
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-    };
+    return () => clearInterval(timer);
   }, [banners.length, paused]);
 
   const goto = (i: number) => {
