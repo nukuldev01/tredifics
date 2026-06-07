@@ -146,6 +146,8 @@ class ProductVariant(models.Model):
     price_override = models.DecimalField(
         max_digits=10, decimal_places=2, null=True, blank=True
     )
+    image = models.ImageField(upload_to="variants/", blank=True, null=True, help_text="Color variation image.")
+    image_url = models.URLField(blank=True)
 
     class Meta:
         unique_together = [("product", "size", "color")]
@@ -163,8 +165,27 @@ class ProductVariant(models.Model):
     def effective_price(self):
         return self.price_override or self.product.effective_price
 
+    def src(self):
+        if self.image:
+            return self.image.url
+        return self.image_url
+
     def __str__(self):
         return f"{self.product.name} / {self.color.name} / {self.size}"
+
+
+class ProductAttribute(models.Model):
+    """Flexible key-value pairs for product details (e.g. Fabric, Fit, Neckline)."""
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="attributes")
+    name = models.CharField(max_length=100, help_text='e.g. "Fabric", "Neckline"')
+    value = models.CharField(max_length=255, help_text='e.g. "100% Pure Cotton", "V Neck"')
+    sort_order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ["sort_order", "id"]
+
+    def __str__(self):
+        return f"{self.name}: {self.value}"
 
 
 class Review(models.Model):

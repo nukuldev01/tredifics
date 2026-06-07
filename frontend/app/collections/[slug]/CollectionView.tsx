@@ -31,6 +31,7 @@ export default function CollectionView({
   const [sizes, setSizes] = useState<string[]>([]);
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
+  const [inStock, setInStock] = useState(false);
   const [sort, setSort] = useState("-created_at");
   const [drawerOpen, setDrawerOpen] = useState(false);
 
@@ -41,6 +42,7 @@ export default function CollectionView({
     if (sizes.length) p.set("size", sizes.join(","));
     if (minPrice) p.set("min_price", minPrice);
     if (maxPrice) p.set("max_price", maxPrice);
+    if (inStock) p.set("in_stock", "true");
     if (sort) p.set("ordering", sort);
     p.set("page_size", "24");
     return p.toString();
@@ -66,6 +68,7 @@ export default function CollectionView({
     setSizes([]);
     setMinPrice("");
     setMaxPrice("");
+    setInStock(false);
   };
 
   const FilterPanel = () => (
@@ -119,27 +122,57 @@ export default function CollectionView({
 
       <details className="filter-section group" open>
         <summary className="flex items-center justify-between py-2 border-b border-neutral-200 font-medium">
+          Availability
+          <ChevronDown size={16} className="group-open:rotate-180 transition" />
+        </summary>
+        <div className="pt-3 pb-2">
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={inStock}
+              onChange={(e) => setInStock(e.target.checked)}
+              className="accent-ink w-4 h-4"
+            />
+            <span>In stock only</span>
+          </label>
+        </div>
+      </details>
+
+      <details className="filter-section group" open>
+        <summary className="flex items-center justify-between py-2 border-b border-neutral-200 font-medium">
           Price
           <ChevronDown size={16} className="group-open:rotate-180 transition" />
         </summary>
-        <div className="pt-3 flex gap-2">
-          <input
-            type="number"
-            placeholder="Min"
-            value={minPrice}
-            onChange={(e) => setMinPrice(e.target.value)}
-            className="border border-neutral-300 px-2 py-1.5 text-xs w-1/2"
-          />
-          <input
-            type="number"
-            placeholder="Max"
-            value={maxPrice}
-            onChange={(e) => setMaxPrice(e.target.value)}
-            className="border border-neutral-300 px-2 py-1.5 text-xs w-1/2"
-          />
+        <div className="pt-3 flex flex-col gap-3 pb-2">
+          {facets && (
+            <input
+              type="range"
+              min={facets.min_price || 0}
+              max={facets.max_price || 10000}
+              value={maxPrice || facets.max_price || 10000}
+              onChange={(e) => setMaxPrice(e.target.value)}
+              className="w-full accent-ink cursor-pointer"
+            />
+          )}
+          <div className="flex gap-2">
+            <input
+              type="number"
+              placeholder="Min"
+              value={minPrice}
+              onChange={(e) => setMinPrice(e.target.value)}
+              className="border border-neutral-300 px-2 py-1.5 text-xs w-1/2"
+            />
+            <input
+              type="number"
+              placeholder="Max"
+              value={maxPrice}
+              onChange={(e) => setMaxPrice(e.target.value)}
+              className="border border-neutral-300 px-2 py-1.5 text-xs w-1/2"
+            />
+          </div>
         </div>
         {facets && (
-          <p className="text-[11px] text-neutral-500 mt-2">
+          <p className="text-[11px] text-neutral-500 mt-1">
             From <Price amount={facets.min_price} /> to <Price amount={facets.max_price} />
           </p>
         )}

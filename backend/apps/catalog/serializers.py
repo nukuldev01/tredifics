@@ -2,7 +2,7 @@ from rest_framework import serializers
 
 from .models import (
     Category, Color, Product, ProductFAQ, ProductImage, ProductShowcase,
-    ProductVariant, Review, ReviewMedia, Wishlist,
+    ProductVariant, Review, ReviewMedia, Wishlist, ProductAttribute
 )
 
 
@@ -70,13 +70,17 @@ class ProductVariantSerializer(serializers.ModelSerializer):
     effective_price = serializers.DecimalField(
         max_digits=10, decimal_places=2, read_only=True
     )
+    src = serializers.SerializerMethodField()
 
     class Meta:
         model = ProductVariant
         fields = (
             "id", "size", "color", "color_id", "sku",
-            "stock", "price_override", "effective_price",
+            "stock", "price_override", "effective_price", "src"
         )
+
+    def get_src(self, obj):
+        return _absolutize(obj.src(), self.context.get("request"))
 
 
 class ReviewMediaSerializer(serializers.ModelSerializer):
@@ -107,6 +111,12 @@ class ProductFAQSerializer(serializers.ModelSerializer):
         fields = ("id", "question", "answer", "sort_order")
 
 
+class ProductAttributeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProductAttribute
+        fields = ("id", "name", "value", "sort_order")
+
+
 class ProductShowcaseSerializer(serializers.ModelSerializer):
     src = serializers.SerializerMethodField()
 
@@ -127,6 +137,8 @@ class ProductListSerializer(serializers.ModelSerializer):
         max_digits=10, decimal_places=2, read_only=True
     )
     discount_percent = serializers.IntegerField(read_only=True)
+    average_rating = serializers.SerializerMethodField()
+    review_count = serializers.SerializerMethodField()
 
     class Meta:
         model = Product
@@ -134,35 +146,8 @@ class ProductListSerializer(serializers.ModelSerializer):
             "id", "name", "slug", "sku", "category", "short_description",
             "price", "sale_price", "effective_price", "discount_percent",
             "currency", "is_featured", "in_stock", "cod_available",
-            "images", "colors", "sizes",
+            "images", "colors", "sizes", "average_rating", "review_count"
         )
-
-    def get_colors(self, obj):
-        return sorted(set(obj.variants.values_list("color__name", flat=True)))
-
-    def get_sizes(self, obj):
-        return sorted(set(obj.variants.values_list("size", flat=True)))
-
-
-class ProductDetailSerializer(ProductListSerializer):
-    variants = ProductVariantSerializer(many=True, read_only=True)
-    reviews = serializers.SerializerMethodField()
-    average_rating = serializers.SerializerMethodField()
-    review_count = serializers.SerializerMethodField()
-    faqs = ProductFAQSerializer(many=True, read_only=True)
-    showcase = ProductShowcaseSerializer(many=True, read_only=True)
-
-    class Meta(ProductListSerializer.Meta):
-        fields = ProductListSerializer.Meta.fields + (
-            "description", "fabric", "occasion", "care_instructions",
-            "country_of_origin", "variants", "reviews",
-            "average_rating", "review_count", "faqs", "showcase",
-            "meta_title", "meta_description",
-        )
-
-    def get_reviews(self, obj):
-        approved = obj.reviews.filter(is_approved=True).prefetch_related("media")
-        return ReviewSerializer(approved, many=True, context=self.context).data
 
     def get_average_rating(self, obj):
         ratings = list(obj.reviews.filter(is_approved=True).values_list("rating", flat=True))
@@ -172,6 +157,42 @@ class ProductDetailSerializer(ProductListSerializer):
 
     def get_review_count(self, obj):
         return obj.reviews.filter(is_approved=True).count()
+
+    def get_colors(self, obj):
+        request = self.context.get("request")
+        variants = obj.variants.select_related("color").all()
+        colors = {}
+        for v in variants:
+            if v.color.name not in colors:
+                colors[v.color.name] = {
+                    "name": v.color.name,
+                    "hex_code": v.color.hex_code,
+                    "src": _absolutize(v.src(), request) if v.src() else None
+                }
+        return list(colors.values())
+
+    def get_sizes(self, obj):
+        return sorted(set(obj.variants.values_list("size", flat=True)))
+
+
+class ProductDetailSerializer(ProductListSerializer):
+    variants = ProductVariantSerializer(many=True, read_only=True)
+    reviews = serializers.SerializerMethodField()
+    faqs = ProductFAQSerializer(many=True, read_only=True)
+    showcase = ProductShowcaseSerializer(many=True, read_only=True)
+    attributes = ProductAttributeSerializer(many=True, read_only=True)
+
+    class Meta(ProductListSerializer.Meta):
+        fields = ProductListSerializer.Meta.fields + (
+            "description", "fabric", "occasion", "care_instructions",
+            "country_of_origin", "variants", "reviews",
+            "faqs", "showcase", "attributes",
+            "meta_title", "meta_description",
+        )
+
+    def get_reviews(self, obj):
+        approved = obj.reviews.filter(is_approved=True).prefetch_related("media")
+        return ReviewSerializer(approved, many=True, context=self.context).data
 
 
 class WishlistSerializer(serializers.ModelSerializer):

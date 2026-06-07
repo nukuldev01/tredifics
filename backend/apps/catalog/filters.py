@@ -12,6 +12,7 @@ class ProductFilter(django_filters.FilterSet):
     fabric = django_filters.CharFilter(field_name="fabric", lookup_expr="iexact")
     occasion = django_filters.CharFilter(field_name="occasion", lookup_expr="iexact")
     featured = django_filters.BooleanFilter(field_name="is_featured")
+    in_stock = django_filters.BooleanFilter(field_name="in_stock")
 
     class Meta:
         model = Product

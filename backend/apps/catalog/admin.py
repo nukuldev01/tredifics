@@ -2,7 +2,7 @@ from django.contrib import admin
 
 from .models import (
     Category, Color, Product, ProductFAQ, ProductImage, ProductShowcase,
-    ProductVariant, Review, ReviewMedia, Wishlist,
+    ProductVariant, Review, ReviewMedia, Wishlist, ProductAttribute
 )
 
 
@@ -15,7 +15,7 @@ class ProductImageInline(admin.TabularInline):
 class ProductVariantInline(admin.TabularInline):
     model = ProductVariant
     extra = 0
-    fields = ("size", "color", "stock", "price_override", "sku")
+    fields = ("size", "color", "stock", "price_override", "sku", "image", "image_url")
     readonly_fields = ("sku",)
 
 
@@ -23,6 +23,11 @@ class ProductFAQInline(admin.TabularInline):
     model = ProductFAQ
     extra = 1
     fields = ("question", "answer", "sort_order", "is_active")
+
+class ProductAttributeInline(admin.TabularInline):
+    model = ProductAttribute
+    extra = 1
+    fields = ("name", "value", "sort_order")
 
 
 class ProductShowcaseInline(admin.TabularInline):
@@ -58,7 +63,7 @@ class ProductAdmin(admin.ModelAdmin):
     readonly_fields = ("sku", "created_at", "updated_at")
     inlines = [
         ProductImageInline, ProductVariantInline,
-        ProductFAQInline, ProductShowcaseInline,
+        ProductAttributeInline, ProductFAQInline, ProductShowcaseInline,
     ]
     fieldsets = (
         ("Basics", {

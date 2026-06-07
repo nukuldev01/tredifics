@@ -13,7 +13,6 @@ html, body {
   background: var(--bg);
   color: var(--ink);
   font-feature-settings: "ss01", "cv11";
-  overflow-x: hidden;
 }
 
 body {

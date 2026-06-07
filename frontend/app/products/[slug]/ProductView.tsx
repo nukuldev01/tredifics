@@ -211,19 +211,29 @@ export default function ProductView({ product }: { product: Product }) {
                 <span>Color: <strong>{selectedColor}</strong></span>
               </div>
               <div className="mt-2 flex flex-wrap gap-2">
-                {allColors.map((c) => (
-                  <button
-                    key={c.id}
-                    onClick={() => setSelectedColor(c.name)}
-                    className={`w-8 h-8 rounded-full border ${
-                      c.name === selectedColor
-                        ? "ring-2 ring-ink ring-offset-2"
-                        : "border-neutral-300"
-                    }`}
-                    style={{ background: c.hex_code }}
-                    aria-label={c.name}
-                  />
-                ))}
+                {allColors.map((c) => {
+                  const variantImg = product.variants.find((v) => v.color.name === c.name)?.src;
+                  return (
+                    <button
+                      key={c.id}
+                      onClick={() => setSelectedColor(c.name)}
+                      className={`w-[42px] h-[42px] rounded-full border p-0.5 overflow-hidden transition-all ${
+                        c.name === selectedColor
+                          ? "ring-1 ring-ink border-ink"
+                          : "border-neutral-300 hover:border-ink"
+                      }`}
+                      aria-label={c.name}
+                    >
+                      <div className="w-full h-full rounded-full overflow-hidden bg-neutral-100 flex items-center justify-center">
+                        {variantImg ? (
+                          <img src={variantImg} alt={c.name} className="w-full h-full object-cover" />
+                        ) : (
+                          <span className="w-full h-full block" style={{ backgroundColor: c.hex_code }} />
+                        )}
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
             </div>
           )}
@@ -376,6 +386,9 @@ export default function ProductView({ product }: { product: Product }) {
                   {product.country_of_origin && (
                     <li><strong>Country of origin:</strong> {product.country_of_origin}</li>
                   )}
+                  {product.attributes && product.attributes.map((attr) => (
+                    <li key={attr.id}><strong>{attr.name}:</strong> {attr.value}</li>
+                  ))}
                 </ul>
               )}
               {tab === "shipping" && (

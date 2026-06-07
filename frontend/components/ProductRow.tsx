@@ -87,6 +87,11 @@ export default function ProductRow({
             </div>
           ))}
         </div>
+        <div className="mt-8 flex justify-center">
+          <Link href={href} className="border border-ink px-10 py-3 text-sm font-medium uppercase tracking-widest hover:bg-ink hover:text-white transition-colors duration-300">
+            View All
+          </Link>
+        </div>
       </div>
     </section>
   );

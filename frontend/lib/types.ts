@@ -16,6 +16,7 @@ export type ProductVariant = {
   stock: number;
   price_override: string | null;
   effective_price: string;
+  src?: string;
 };
 
 export type ReviewMedia = {
@@ -39,6 +40,13 @@ export type ProductFAQ = {
   id: number;
   question: string;
   answer: string;
+  sort_order: number;
+};
+
+export type ProductAttribute = {
+  id: number;
+  name: string;
+  value: string;
   sort_order: number;
 };
 
@@ -66,8 +74,10 @@ export type ProductListItem = {
   in_stock: boolean;
   cod_available?: boolean;
   images: ProductImage[];
-  colors: string[];
+  colors: { name: string; hex_code: string; src: string | null }[];
   sizes: string[];
+  average_rating: number;
+  review_count: number;
 };
 
 export type Product = ProductListItem & {
@@ -82,6 +92,7 @@ export type Product = ProductListItem & {
   review_count: number;
   faqs: ProductFAQ[];
   showcase: ProductShowcase[];
+  attributes: ProductAttribute[];
   meta_title?: string;
   meta_description?: string;
 };
