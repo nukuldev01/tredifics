@@ -67,55 +67,55 @@ export default function ReviewPopup() {
           : "translate-y-4 opacity-0 pointer-events-none"
       }`}
     >
-      <div className="bg-white border border-neutral-200 shadow-xl p-4 relative">
+      <div className="bg-white border border-neutral-200 shadow-xl relative overflow-hidden flex min-h-[110px]">
         <button
           onClick={() => setClosed(true)}
           aria-label="Dismiss"
-          className="absolute top-2 right-2 text-neutral-400 hover:text-ink"
+          className="absolute top-2 right-2 text-neutral-400 hover:text-ink z-10 bg-white/80 rounded-full p-1 backdrop-blur-sm"
         >
           <X size={14} />
         </button>
-        <div className="flex items-start gap-3">
-          {r.src ? (
+        {r.src ? (
+          <div className="w-[110px] shrink-0 bg-neutral-100">
             <img
               src={r.src}
               alt={r.user_name}
-              className="w-10 h-10 rounded-full object-cover bg-neutral-100"
+              className="w-full h-full object-cover"
             />
-          ) : (
-            <div className="w-10 h-10 rounded-full bg-cream flex items-center justify-center text-xs font-medium">
-              {r.user_name.charAt(0).toUpperCase()}
-            </div>
-          )}
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center justify-between">
-              <p className="text-sm font-medium truncate">{r.user_name}</p>
-              <div className="flex">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <Star
-                    key={i}
-                    size={11}
-                    className={
-                      i < r.rating
-                        ? "fill-[#fbbc04] text-[#fbbc04]"
-                        : "text-neutral-300"
-                    }
-                  />
-                ))}
-              </div>
-            </div>
-            {r.title && (
-              <p className="text-xs font-medium text-ink mt-0.5">{r.title}</p>
-            )}
-            <p className="text-xs text-neutral-700 mt-1 line-clamp-3">
-              {r.comment}
-            </p>
-            {r.product_name && (
-              <p className="text-[11px] text-neutral-500 mt-1.5 italic">
-                on {r.product_name}
-              </p>
-            )}
           </div>
+        ) : (
+          <div className="w-[110px] shrink-0 bg-cream flex items-center justify-center text-3xl font-medium text-neutral-400">
+            {r.user_name.charAt(0).toUpperCase()}
+          </div>
+        )}
+        <div className="flex-1 min-w-0 p-4 flex flex-col justify-center">
+          <div className="flex items-center justify-between mb-1">
+            <p className="text-sm font-medium truncate pr-6">{r.user_name}</p>
+            <div className="flex shrink-0 ml-2">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <Star
+                  key={i}
+                  size={11}
+                  className={
+                    i < r.rating
+                      ? "fill-[#fbbc04] text-[#fbbc04]"
+                      : "text-neutral-300"
+                  }
+                />
+              ))}
+            </div>
+          </div>
+          {r.title && (
+            <p className="text-xs font-semibold text-ink mt-0.5 line-clamp-1">{r.title}</p>
+          )}
+          <p className="text-xs text-neutral-700 mt-1 line-clamp-2 leading-relaxed">
+            {r.comment}
+          </p>
+          {r.product_name && (
+            <p className="text-[10px] text-neutral-500 mt-2 italic line-clamp-1">
+              on {r.product_name}
+            </p>
+          )}
         </div>
       </div>
     </div>

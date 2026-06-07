@@ -67,12 +67,13 @@ export default function ProductView({ product }: { product: Product }) {
     if (votedReviews[reviewId]) return;
     setVotedReviews(prev => ({ ...prev, [reviewId]: voteType }));
     try {
-      await fetch(`/api/reviews/${reviewId}/vote/`, {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
+      await fetch(`${apiUrl}/api/reviews/${reviewId}/vote/`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ vote: voteType }),
       });
-      setReviewsKey(k => k + 1); // Soft refresh to pull new counts if needed
+      router.refresh(); // Refresh server data so the new counts come down
     } catch (e) {
       console.error(e);
     }
@@ -649,13 +650,13 @@ export default function ProductView({ product }: { product: Product }) {
                       onClick={() => handleVote(r.id, "helpful")}
                       disabled={!!votedReviews[r.id]}
                       className={`flex items-center gap-1.5 border border-neutral-200 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${votedReviews[r.id] === 'helpful' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'text-neutral-600 hover:bg-neutral-50 hover:border-neutral-300 bg-white disabled:opacity-50'}`}>
-                      <ThumbsUp size={14} /> Helpful ({r.helpful_votes || 0})
+                      <ThumbsUp size={14} /> Helpful ({(r.helpful_votes || 0) + (votedReviews[r.id] === 'helpful' ? 1 : 0)})
                     </button>
                     <button 
                       onClick={() => handleVote(r.id, "not_helpful")}
                       disabled={!!votedReviews[r.id]}
                       className={`flex items-center gap-1.5 border border-neutral-200 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${votedReviews[r.id] === 'not_helpful' ? 'bg-rust/10 text-rust border-rust/20' : 'text-neutral-600 hover:bg-neutral-50 hover:border-neutral-300 bg-white disabled:opacity-50'}`}>
-                      <ThumbsDown size={14} /> Not Helpful ({r.not_helpful_votes || 0})
+                      <ThumbsDown size={14} /> Not Helpful ({(r.not_helpful_votes || 0) + (votedReviews[r.id] === 'not_helpful' ? 1 : 0)})
                     </button>
                   </div>
                 </article>
