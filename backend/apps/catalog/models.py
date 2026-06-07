@@ -197,6 +197,9 @@ class Review(models.Model):
     rating = models.PositiveSmallIntegerField()
     title = models.CharField(max_length=200, blank=True)
     body = models.TextField(blank=True)
+    reviewer_image = models.ImageField(upload_to="reviewers/", blank=True, null=True, help_text="Optional profile photo of the reviewer.")
+    helpful_votes = models.PositiveIntegerField(default=0)
+    not_helpful_votes = models.PositiveIntegerField(default=0)
     is_approved = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 

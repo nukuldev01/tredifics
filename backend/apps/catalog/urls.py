@@ -12,4 +12,5 @@ urlpatterns = [
     path("", include(router.urls)),
     path("colors/", views.ColorListView.as_view(), name="colors"),
     path("reviews/", views.ReviewCreateView.as_view(), name="review-create"),
+    path("reviews/<int:pk>/vote/", views.ReviewVoteView.as_view(), name="review-vote"),
 ]

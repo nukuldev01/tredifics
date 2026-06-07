@@ -97,12 +97,19 @@ class ReviewMediaSerializer(serializers.ModelSerializer):
 class ReviewSerializer(serializers.ModelSerializer):
     media = ReviewMediaSerializer(many=True, read_only=True)
     rating = serializers.IntegerField(min_value=1, max_value=5)
+    reviewer_image_url = serializers.SerializerMethodField()
 
     class Meta:
         model = Review
         fields = ("id", "product", "name", "rating", "title", "body",
-                  "media", "created_at")
-        read_only_fields = ("created_at",)
+                  "media", "reviewer_image_url", "helpful_votes", "not_helpful_votes", "created_at")
+        read_only_fields = ("created_at", "helpful_votes", "not_helpful_votes")
+
+    def get_reviewer_image_url(self, obj):
+        request = self.context.get("request")
+        if obj.reviewer_image:
+            return _absolutize(obj.reviewer_image.url, request)
+        return ""
 
 
 class ProductFAQSerializer(serializers.ModelSerializer):

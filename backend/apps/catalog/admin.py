@@ -104,6 +104,7 @@ class ReviewAdmin(admin.ModelAdmin):
     list_display = ("product", "name", "rating", "is_approved", "created_at")
     list_filter = ("rating", "is_approved")
     search_fields = ("product__name", "name", "body")
+    fields = ("product", "user", "name", "rating", "title", "body", "reviewer_image", "helpful_votes", "not_helpful_votes", "is_approved")
     inlines = [ReviewMediaInline]
     actions = ["approve_reviews", "reject_reviews"]
 

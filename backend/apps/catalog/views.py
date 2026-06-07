@@ -120,6 +120,31 @@ class ReviewCreateView(generics.CreateAPIView):
         )
 
 
+class ReviewVoteView(generics.GenericAPIView):
+    """Increment helpful or not_helpful votes for a review."""
+    queryset = Review.objects.all()
+    permission_classes = [permissions.AllowAny]
+
+    @method_decorator(ratelimit(key="ip", rate="20/h", method="POST", block=True))
+    def post(self, request, pk):
+        from django.shortcuts import get_object_or_404
+        review = get_object_or_404(Review, pk=pk)
+        vote_type = request.data.get("vote")
+        if vote_type == "helpful":
+            review.helpful_votes += 1
+            review.save(update_fields=["helpful_votes"])
+        elif vote_type == "not_helpful":
+            review.not_helpful_votes += 1
+            review.save(update_fields=["not_helpful_votes"])
+        else:
+            return Response({"detail": "Invalid vote type."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        return Response({
+            "helpful_votes": review.helpful_votes,
+            "not_helpful_votes": review.not_helpful_votes
+        })
+
+
 class WishlistViewSet(viewsets.ModelViewSet):
     """Per-user wishlist. GET /api/wishlist/ + POST + DELETE /api/wishlist/<id>/."""
     serializer_class = WishlistSerializer
