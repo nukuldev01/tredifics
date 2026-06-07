@@ -37,13 +37,7 @@ export default function CollectionView({
   const [sort, setSort] = useState("-created_at");
   const [drawerOpen, setDrawerOpen] = useState(false);
 
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      setMinPrice(minPriceInput);
-      setMaxPrice(maxPriceInput);
-    }, 500);
-    return () => clearTimeout(handler);
-  }, [minPriceInput, maxPriceInput]);
+
 
   const query = useMemo(() => {
     const p = new URLSearchParams();
@@ -197,16 +191,25 @@ export default function CollectionView({
               placeholder="Min"
               value={minPriceInput}
               onChange={(e) => setMinPriceInput(e.target.value)}
-              className="border border-neutral-300 px-2 py-1.5 text-xs w-1/2 focus:outline-none focus:border-ink"
+              className="border border-neutral-300 px-2 py-1.5 text-xs w-full focus:outline-none focus:border-ink"
             />
             <input
               type="number"
               placeholder="Max"
               value={maxPriceInput}
               onChange={(e) => setMaxPriceInput(e.target.value)}
-              className="border border-neutral-300 px-2 py-1.5 text-xs w-1/2 focus:outline-none focus:border-ink"
+              className="border border-neutral-300 px-2 py-1.5 text-xs w-full focus:outline-none focus:border-ink"
             />
           </div>
+          <button
+            onClick={() => {
+              setMinPrice(minPriceInput);
+              setMaxPrice(maxPriceInput);
+            }}
+            className="w-full bg-neutral-900 text-white text-xs py-2 mt-1 hover:bg-neutral-800 transition rounded-sm"
+          >
+            Apply
+          </button>
         </div>
       </details>
 
