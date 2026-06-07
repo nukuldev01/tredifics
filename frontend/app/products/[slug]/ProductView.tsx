@@ -278,7 +278,7 @@ export default function ProductView({ product }: { product: Product }) {
               </div>
               <div className="mt-2 flex flex-wrap gap-2">
                 {allColors.map((c) => {
-                  const variantImg = product.variants.find((v) => v.color.name === c.name)?.src;
+                  const variantImg = product.variants.find((v) => v.color.name === c.name && v.src)?.src;
                   return (
                     <button
                       key={c.id}

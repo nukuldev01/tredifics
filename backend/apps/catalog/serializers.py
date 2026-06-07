@@ -176,6 +176,8 @@ class ProductListSerializer(serializers.ModelSerializer):
                     "hex_code": v.color.hex_code,
                     "src": _absolutize(v.src(), request) if v.src() else None
                 }
+            elif not colors[v.color.name]["src"] and v.src():
+                colors[v.color.name]["src"] = _absolutize(v.src(), request)
         return list(colors.values())
 
     def get_sizes(self, obj):
