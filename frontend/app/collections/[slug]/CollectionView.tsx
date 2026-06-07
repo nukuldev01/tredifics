@@ -31,9 +31,19 @@ export default function CollectionView({
   const [sizes, setSizes] = useState<string[]>([]);
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
+  const [minPriceInput, setMinPriceInput] = useState("");
+  const [maxPriceInput, setMaxPriceInput] = useState("");
   const [inStock, setInStock] = useState(false);
   const [sort, setSort] = useState("-created_at");
   const [drawerOpen, setDrawerOpen] = useState(false);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setMinPrice(minPriceInput);
+      setMaxPrice(maxPriceInput);
+    }, 500);
+    return () => clearTimeout(handler);
+  }, [minPriceInput, maxPriceInput]);
 
   const query = useMemo(() => {
     const p = new URLSearchParams();
@@ -68,6 +78,8 @@ export default function CollectionView({
     setSizes([]);
     setMinPrice("");
     setMaxPrice("");
+    setMinPriceInput("");
+    setMaxPriceInput("");
     setInStock(false);
   };
 
@@ -145,51 +157,53 @@ export default function CollectionView({
         </summary>
         <div className="pt-6 flex flex-col gap-4 pb-2 px-1">
           {facets && (
-            <div className="relative h-1 bg-neutral-200 rounded w-full mb-2">
-              <div 
-                className="absolute h-full bg-ink rounded"
-                style={{
-                  left: `${((Number(minPrice || facets.min_price || 0) - (facets.min_price || 0)) / ((facets.max_price || 1000) - (facets.min_price || 0))) * 100}%`,
-                  right: `${100 - ((Number(maxPrice || facets.max_price || 1000) - (facets.min_price || 0)) / ((facets.max_price || 1000) - (facets.min_price || 0))) * 100}%`
-                }}
-              />
-              <input
-                type="range"
-                min={facets.min_price || 0}
-                max={facets.max_price || 1000}
-                value={minPrice || facets.min_price || 0}
-                onChange={(e) => {
-                  const val = Math.min(Number(e.target.value), Number(maxPrice || facets.max_price || 1000) - 1);
-                  setMinPrice(val.toString());
-                }}
-                className="absolute w-full -top-[7px] pointer-events-none appearance-none bg-transparent [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-[18px] [&::-webkit-slider-thumb]:h-[18px] [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-ink [&::-webkit-slider-thumb]:shadow-md"
-              />
-              <input
-                type="range"
-                min={facets.min_price || 0}
-                max={facets.max_price || 1000}
-                value={maxPrice || facets.max_price || 1000}
-                onChange={(e) => {
-                  const val = Math.max(Number(e.target.value), Number(minPrice || facets.min_price || 0) + 1);
-                  setMaxPrice(val.toString());
-                }}
-                className="absolute w-full -top-[7px] pointer-events-none appearance-none bg-transparent [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-[18px] [&::-webkit-slider-thumb]:h-[18px] [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-ink [&::-webkit-slider-thumb]:shadow-md"
-              />
+            <div className="px-2 w-full mb-4 mt-2">
+              <div className="relative h-1 bg-neutral-200 rounded w-full">
+                <div 
+                  className="absolute h-full bg-ink rounded"
+                  style={{
+                    left: `${((Number(minPriceInput || facets.min_price || 0) - (facets.min_price || 0)) / ((facets.max_price || 1000) - (facets.min_price || 0))) * 100}%`,
+                    right: `${100 - ((Number(maxPriceInput || facets.max_price || 1000) - (facets.min_price || 0)) / ((facets.max_price || 1000) - (facets.min_price || 0))) * 100}%`
+                  }}
+                />
+                <input
+                  type="range"
+                  min={facets.min_price || 0}
+                  max={facets.max_price || 1000}
+                  value={minPriceInput || facets.min_price || 0}
+                  onChange={(e) => {
+                    const val = Math.min(Number(e.target.value), Number(maxPriceInput || facets.max_price || 1000) - 1);
+                    setMinPriceInput(val.toString());
+                  }}
+                  className="absolute w-full -left-0 -right-0 -top-[7px] pointer-events-none appearance-none bg-transparent [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-[18px] [&::-webkit-slider-thumb]:h-[18px] [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-ink [&::-webkit-slider-thumb]:shadow-md"
+                />
+                <input
+                  type="range"
+                  min={facets.min_price || 0}
+                  max={facets.max_price || 1000}
+                  value={maxPriceInput || facets.max_price || 1000}
+                  onChange={(e) => {
+                    const val = Math.max(Number(e.target.value), Number(minPriceInput || facets.min_price || 0) + 1);
+                    setMaxPriceInput(val.toString());
+                  }}
+                  className="absolute w-full -left-0 -right-0 -top-[7px] pointer-events-none appearance-none bg-transparent [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-[18px] [&::-webkit-slider-thumb]:h-[18px] [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-ink [&::-webkit-slider-thumb]:shadow-md"
+                />
+              </div>
             </div>
           )}
           <div className="flex gap-2">
             <input
               type="number"
               placeholder="Min"
-              value={minPrice}
-              onChange={(e) => setMinPrice(e.target.value)}
+              value={minPriceInput}
+              onChange={(e) => setMinPriceInput(e.target.value)}
               className="border border-neutral-300 px-2 py-1.5 text-xs w-1/2 focus:outline-none focus:border-ink"
             />
             <input
               type="number"
               placeholder="Max"
-              value={maxPrice}
-              onChange={(e) => setMaxPrice(e.target.value)}
+              value={maxPriceInput}
+              onChange={(e) => setMaxPriceInput(e.target.value)}
               className="border border-neutral-300 px-2 py-1.5 text-xs w-1/2 focus:outline-none focus:border-ink"
             />
           </div>
