@@ -15,8 +15,15 @@ class ProductImageInline(admin.TabularInline):
 class ProductVariantInline(admin.TabularInline):
     model = ProductVariant
     extra = 0
-    fields = ("size", "color", "stock", "price_override", "sku", "image", "image_url")
-    readonly_fields = ("sku",)
+    fields = ("size", "color", "stock", "price_override", "sku", "image_preview", "image", "image_url")
+    readonly_fields = ("image_preview", "sku")
+
+    def image_preview(self, obj):
+        if obj.image:
+            from django.utils.html import format_html
+            return format_html('<img src="{}" style="max-height: 40px; border-radius: 4px;" />', obj.image.url)
+        return "No image"
+    image_preview.short_description = "Preview"
 
 
 class ProductFAQInline(admin.TabularInline):
