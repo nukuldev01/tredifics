@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   Star, Truck, Shield, RotateCcw, Ruler, Plus, Minus, Banknote, RefreshCcw, Timer,
-  Heart, Pencil, ShieldCheck, MessageCircleHeart, Leaf, CheckCircle2, ThumbsUp, ThumbsDown
+  Heart, Pencil, ShieldCheck, MessageCircleHeart, Leaf, CheckCircle2, ThumbsUp, ThumbsDown, X
 } from "lucide-react";
 import type { Product, ProductVariant } from "@/lib/types";
 import { useCart } from "@/lib/cart";
@@ -60,6 +60,23 @@ export default function ProductView({ product }: { product: Product }) {
   const [reviewsKey, setReviewsKey] = useState(0); // bump to force soft refresh
   const [reviewSort, setReviewSort] = useState("Most Recent");
   const [showAllReviews, setShowAllReviews] = useState(false);
+  const [votedReviews, setVotedReviews] = useState<Record<number, "helpful" | "not_helpful">>({});
+  const [activeReview, setActiveReview] = useState<typeof product.reviews[0] | null>(null);
+
+  const handleVote = async (reviewId: number, voteType: "helpful" | "not_helpful") => {
+    if (votedReviews[reviewId]) return;
+    setVotedReviews(prev => ({ ...prev, [reviewId]: voteType }));
+    try {
+      await fetch(`/api/reviews/${reviewId}/vote/`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ vote: voteType }),
+      });
+      setReviewsKey(k => k + 1); // Soft refresh to pull new counts if needed
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   const variant: ProductVariant | undefined = product.variants.find(
     (v) => v.color.name === selectedColor && v.size === selectedSize
@@ -581,11 +598,24 @@ export default function ProductView({ product }: { product: Product }) {
                   </div>
                   
                   {/* User info */}
-                  <div className="flex items-center gap-2 mb-4">
-                    <span className="font-medium text-sm text-neutral-800">{r.name}</span>
-                    <span className="flex items-center gap-1 text-[10px] uppercase tracking-wide text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full font-semibold border border-emerald-100">
-                      <CheckCircle2 size={12} /> Verified Buyer
-                    </span>
+                  <div className="flex items-center gap-3 mb-4">
+                    {r.reviewer_image_url ? (
+                      <button onClick={() => setActiveReview(r)} className="w-10 h-10 rounded-full overflow-hidden border border-neutral-200 flex-shrink-0 cursor-zoom-in hover:opacity-80 transition-opacity" title="View Full Review">
+                        <img src={r.reviewer_image_url} alt={r.name} className="w-full h-full object-cover" />
+                      </button>
+                    ) : (
+                      <div className="w-10 h-10 rounded-full bg-neutral-100 flex items-center justify-center text-neutral-500 font-semibold border border-neutral-200 flex-shrink-0">
+                        {r.name.charAt(0).toUpperCase()}
+                      </div>
+                    )}
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium text-sm text-neutral-800">{r.name}</span>
+                        <span className="flex items-center gap-1 text-[10px] uppercase tracking-wide text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full font-semibold border border-emerald-100">
+                          <CheckCircle2 size={12} /> Verified Buyer
+                        </span>
+                      </div>
+                    </div>
                   </div>
 
                   {/* Review text */}
@@ -615,11 +645,17 @@ export default function ProductView({ product }: { product: Product }) {
                   {/* Helpful buttons */}
                   <div className="flex items-center gap-4 mt-5 pt-5 border-t border-neutral-50">
                     <span className="text-sm text-neutral-500 font-medium">Was this review helpful?</span>
-                    <button className="flex items-center gap-1.5 border border-neutral-200 rounded-md px-3 py-1.5 text-xs font-medium text-neutral-600 hover:bg-neutral-50 hover:border-neutral-300 transition-colors bg-white">
-                      <ThumbsUp size={14} /> Helpful (0)
+                    <button 
+                      onClick={() => handleVote(r.id, "helpful")}
+                      disabled={!!votedReviews[r.id]}
+                      className={`flex items-center gap-1.5 border border-neutral-200 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${votedReviews[r.id] === 'helpful' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'text-neutral-600 hover:bg-neutral-50 hover:border-neutral-300 bg-white disabled:opacity-50'}`}>
+                      <ThumbsUp size={14} /> Helpful ({r.helpful_votes || 0})
                     </button>
-                    <button className="flex items-center gap-1.5 border border-neutral-200 rounded-md px-3 py-1.5 text-xs font-medium text-neutral-600 hover:bg-neutral-50 hover:border-neutral-300 transition-colors bg-white">
-                      <ThumbsDown size={14} /> Not Helpful (0)
+                    <button 
+                      onClick={() => handleVote(r.id, "not_helpful")}
+                      disabled={!!votedReviews[r.id]}
+                      className={`flex items-center gap-1.5 border border-neutral-200 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${votedReviews[r.id] === 'not_helpful' ? 'bg-rust/10 text-rust border-rust/20' : 'text-neutral-600 hover:bg-neutral-50 hover:border-neutral-300 bg-white disabled:opacity-50'}`}>
+                      <ThumbsDown size={14} /> Not Helpful ({r.not_helpful_votes || 0})
                     </button>
                   </div>
                 </article>
@@ -712,6 +748,63 @@ export default function ProductView({ product }: { product: Product }) {
             >
               Close
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Pop-up Review Modal */}
+      {activeReview && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm" onClick={() => setActiveReview(null)}>
+          <div 
+            className="relative bg-white max-w-4xl w-full flex flex-col md:flex-row overflow-hidden rounded-xl shadow-2xl" 
+            onClick={e => e.stopPropagation()}
+          >
+            <button 
+              onClick={() => setActiveReview(null)} 
+              className="absolute top-4 right-4 z-10 bg-white/60 hover:bg-white rounded-full p-2 text-neutral-800 transition-colors backdrop-blur-md"
+            >
+              <X size={24} />
+            </button>
+            
+            {/* Left side: Reviewer image */}
+            {activeReview.reviewer_image_url && (
+              <div className="w-full md:w-2/5 h-[300px] md:h-auto shrink-0 relative bg-neutral-100">
+                <img src={activeReview.reviewer_image_url} alt={activeReview.name} className="w-full h-full object-cover absolute inset-0" />
+              </div>
+            )}
+            
+            {/* Right side: Review details */}
+            <div className={`p-8 ${!activeReview.reviewer_image_url ? 'w-full' : 'w-full md:w-3/5'} flex flex-col`}>
+               <div className="flex items-center justify-between mb-4">
+                 <div className="flex">
+                   {Array.from({ length: 5 }).map((_, i) => (
+                     <Star key={i} size={18} className={i < activeReview.rating ? "fill-[#fbbc04] text-[#fbbc04]" : "text-neutral-200"} />
+                   ))}
+                 </div>
+                 <div className="text-sm text-neutral-400" suppressHydrationWarning>
+                   {new Date(activeReview.created_at).toLocaleDateString(undefined, { day: "numeric", month: "long", year: "numeric" })}
+                 </div>
+               </div>
+               
+               <div className="flex items-center gap-2 mb-6 border-b border-neutral-100 pb-4">
+                 <span className="font-semibold text-lg text-neutral-800">{activeReview.name}</span>
+                 <span className="flex items-center gap-1 text-[10px] uppercase tracking-wide text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full font-semibold border border-emerald-100">
+                   <CheckCircle2 size={12} /> Verified Buyer
+                 </span>
+               </div>
+               
+               {activeReview.title && <h4 className="font-bold text-xl mb-3 text-neutral-900">{activeReview.title}</h4>}
+               <p className="text-neutral-700 mb-8 leading-relaxed text-base">{activeReview.body}</p>
+               
+               {/* Product reference in popup */}
+               <div className="flex items-center gap-4 bg-neutral-50 p-4 rounded-lg mt-auto border border-neutral-100">
+                 <img src={product.images[0]?.src} alt={product.name} className="w-16 h-16 object-cover rounded shadow-sm" />
+                 <div>
+                   <p className="text-xs text-neutral-500 uppercase tracking-widest mb-1">Reviewed Product</p>
+                   <p className="font-medium text-sm text-neutral-900 line-clamp-1">{product.name}</p>
+                 </div>
+               </div>
+            </div>
           </div>
         </div>
       )}

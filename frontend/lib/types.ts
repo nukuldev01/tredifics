@@ -28,12 +28,16 @@ export type ReviewMedia = {
 
 export type Review = {
   id: number;
+  product: number;
   name: string;
   rating: number;
   title: string;
   body: string;
+  reviewer_image_url?: string;
+  helpful_votes: number;
+  not_helpful_votes: number;
+  media: { id: number; kind: "image" | "video"; src: string; sort_order: number }[];
   created_at: string;
-  media?: ReviewMedia[];
 };
 
 export type ProductFAQ = {
