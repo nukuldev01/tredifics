@@ -16,6 +16,7 @@ import ShowcaseGrid from "@/components/ShowcaseGrid";
 import RelatedProducts from "@/components/RelatedProducts";
 import RecentlyViewed from "@/components/RecentlyViewed";
 import Breadcrumbs from "@/components/Breadcrumbs";
+import Markdown from "@/components/Markdown";
 import { pushRecentlyViewed } from "@/lib/recentlyViewed";
 
 export default function ProductView({ product }: { product: Product }) {
@@ -450,7 +451,11 @@ export default function ProductView({ product }: { product: Product }) {
               ))}
             </div>
             <div className="py-4 text-sm text-neutral-700 leading-relaxed">
-              {tab === "desc" && <p>{product.description}</p>}
+              {tab === "desc" && (
+                <div className="text-sm">
+                  <Markdown source={product.description} />
+                </div>
+              )}
               {tab === "details" && (
                 <ul className="space-y-1.5">
                   {product.fabric && <li><strong>Fabric:</strong> {product.fabric}</li>}

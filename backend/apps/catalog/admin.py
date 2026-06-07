@@ -19,7 +19,8 @@ class ProductVariantInline(admin.TabularInline):
     readonly_fields = ("image_preview", "sku")
 
     def image_preview(self, obj):
-        if obj.image:
+        # Only show preview for saved objects, otherwise validation errors cause broken image icons
+        if obj.pk and obj.image:
             from django.utils.html import format_html
             return format_html('<img src="{}" style="max-height: 40px; border-radius: 4px;" />', obj.image.url)
         return "No image"
