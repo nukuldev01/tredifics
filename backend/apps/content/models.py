@@ -141,11 +141,16 @@ class Reel(models.Model):
     """Influencer reel — Instagram Reels or YouTube Shorts embed."""
     title = models.CharField(max_length=200, blank=True)
     embed_url = models.URLField(
+        blank=True,
         help_text=(
             "Instagram Reel URL (https://www.instagram.com/reel/...) "
             "or YouTube Shorts URL (https://youtube.com/shorts/...). "
             "Paste the public share URL — the storefront converts it to embeds."
         ),
+    )
+    video_file = models.FileField(
+        upload_to="reels/videos/", blank=True, null=True,
+        help_text="Upload an MP4 video directly (recommended for 100% reliable playback without external embeds).",
     )
     thumbnail = models.ImageField(upload_to="reels/", blank=True, null=True)
     thumbnail_url = models.URLField(blank=True)

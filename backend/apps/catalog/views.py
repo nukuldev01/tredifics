@@ -2,6 +2,7 @@ from django.utils.decorators import method_decorator
 from django_ratelimit.decorators import ratelimit
 from rest_framework import generics, permissions, status, viewsets
 from rest_framework.decorators import action
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.response import Response
 
@@ -33,6 +34,12 @@ class ColorListView(generics.ListAPIView):
     authentication_classes = []  # public endpoint — ignore any stale JWT
 
 
+class StandardResultsSetPagination(PageNumberPagination):
+    page_size = 24
+    page_size_query_param = "page_size"
+    max_page_size = 100
+
+
 class ProductViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = (
         Product.objects.filter(status=Product.STATUS_PUBLISHED)
@@ -40,6 +47,7 @@ class ProductViewSet(viewsets.ReadOnlyModelViewSet):
         .prefetch_related("images", "variants__color", "reviews",
                           "faqs", "showcase")
     )
+    pagination_class = StandardResultsSetPagination
     lookup_field = "slug"
     authentication_classes = []  # public endpoint — ignore any stale JWT
     filterset_class = ProductFilter

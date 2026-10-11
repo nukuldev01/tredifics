@@ -112,8 +112,20 @@ export default function Footer() {
         </div>
       </div>
 
-      <div className="border-t border-neutral-200 py-4 text-center text-xs text-neutral-500">
-        © {new Date().getFullYear()} Tredific® · All rights reserved · Designed in India
+      <div className="border-t border-neutral-200 py-4 px-4 text-center text-xs text-neutral-500 flex flex-col sm:flex-row items-center justify-center gap-1.5 sm:gap-2">
+        <span>© {new Date().getFullYear()} Tredific® · All rights reserved · Designed in India</span>
+        <span className="hidden sm:inline text-neutral-300">|</span>
+        <span>
+          Website designed and developed by{" "}
+          <a
+            href="https://dizytale.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-ink font-medium hover:underline inline-flex items-center gap-0.5"
+          >
+            Dizytale Technology
+          </a>
+        </span>
       </div>
     </footer>
   );

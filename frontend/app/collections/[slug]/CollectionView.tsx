@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import useSWR from "swr";
 import { fetcher } from "@/lib/api";
 import ProductCard from "@/components/ProductCard";
-import { ChevronDown, SlidersHorizontal, X } from "lucide-react";
+import { ChevronDown, ChevronLeft, ChevronRight, Loader2, SlidersHorizontal, X } from "lucide-react";
 import type { ProductListItem } from "@/lib/types";
 import Price from "@/components/Price";
 
@@ -37,7 +37,10 @@ export default function CollectionView({
   const [sort, setSort] = useState("-created_at");
   const [drawerOpen, setDrawerOpen] = useState(false);
 
-
+  // Pagination & Load More states
+  const [page, setPage] = useState(1);
+  const [items, setItems] = useState<ProductListItem[]>([]);
+  const [loadingMore, setLoadingMore] = useState(false);
 
   const query = useMemo(() => {
     const p = new URLSearchParams();
@@ -50,14 +53,86 @@ export default function CollectionView({
     if (sort) p.set("ordering", sort);
     p.set("page_size", "24");
     return p.toString();
-  }, [slug, colors, sizes, minPrice, maxPrice, sort]);
+  }, [slug, colors, sizes, minPrice, maxPrice, inStock, sort]);
 
-  const { data, isLoading } = useSWR(`/products/?${query}`, fetcher);
+  // Reset to page 1 whenever filters change
+  useEffect(() => {
+    setPage(1);
+  }, [query]);
+
+  const { data, isLoading } = useSWR(`/products/?${query}&page=${page}`, fetcher);
   const { data: facets } = useSWR(`/products/facets/?${query}`, fetcher);
   const { data: colorMaster } = useSWR(`/colors/`, fetcher);
 
-  const products: ProductListItem[] = data?.results || [];
-  const count = data?.count ?? 0;
+  const count = data?.count ?? (data?.results?.length ?? 0);
+  const totalPages = Math.max(1, Math.ceil(count / 24));
+
+  // Sync data with items when on page 1
+  useEffect(() => {
+    if (data?.results && page === 1) {
+      setItems(data.results);
+    }
+  }, [data, page]);
+
+  // Load next 24 products and append
+  const handleViewMore = async () => {
+    if (loadingMore || page >= totalPages) return;
+    setLoadingMore(true);
+    try {
+      const nextPage = page + 1;
+      const res = await fetcher(`/products/?${query}&page=${nextPage}`);
+      if (res?.results) {
+        setItems((prev) => [...prev, ...res.results]);
+        setPage(nextPage);
+      }
+    } catch (err) {
+      console.error("Failed to load more products:", err);
+    } finally {
+      setLoadingMore(false);
+    }
+  };
+
+  // Jump to specific page
+  const handlePageChange = async (targetPage: number) => {
+    if (targetPage === page || targetPage < 1 || targetPage > totalPages) return;
+    setLoadingMore(true);
+    try {
+      const res = await fetcher(`/products/?${query}&page=${targetPage}`);
+      if (res?.results) {
+        setItems(res.results);
+        setPage(targetPage);
+        const topEl = document.getElementById("collection-products-top");
+        if (topEl) {
+          topEl.scrollIntoView({ behavior: "smooth" });
+        } else {
+          window.scrollTo({ top: 160, behavior: "smooth" });
+        }
+      }
+    } catch (err) {
+      console.error("Failed to change page:", err);
+    } finally {
+      setLoadingMore(false);
+    }
+  };
+
+  // Helper for pagination numbers with ellipses
+  const getPageNumbers = () => {
+    const pages: (number | string)[] = [];
+    if (totalPages <= 7) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      if (page <= 4) {
+        pages.push(1, 2, 3, 4, 5, "...", totalPages);
+      } else if (page >= totalPages - 3) {
+        pages.push(1, "...", totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
+      } else {
+        pages.push(1, "...", page - 1, page, page + 1, "...", totalPages);
+      }
+    }
+    return pages;
+  };
+
+  const displayedProducts = items.length > 0 ? items : (data?.results || []);
 
   const toggle = (
     setter: (v: string[]) => void,
@@ -270,23 +345,108 @@ export default function CollectionView({
         </aside>
 
         {/* Grid */}
-        <div className="flex-1">
-          {isLoading ? (
+        <div className="flex-1" id="collection-products-top">
+          {isLoading && displayedProducts.length === 0 ? (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-3 gap-y-8">
               {Array.from({ length: 8 }).map((_, i) => (
                 <div key={i} className="aspect-[3/4] bg-neutral-100 animate-pulse" />
               ))}
             </div>
-          ) : products.length === 0 ? (
+          ) : displayedProducts.length === 0 ? (
             <div className="py-20 text-center text-neutral-500">
               No products match your filters.
             </div>
           ) : (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-3 gap-y-8 md:gap-x-5">
-              {products.map((p) => (
-                <ProductCard key={p.id} product={p} />
-              ))}
-            </div>
+            <>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-3 gap-y-8 md:gap-x-5">
+                {displayedProducts.map((p) => (
+                  <ProductCard key={p.id} product={p} />
+                ))}
+              </div>
+
+              {/* View More & Pagination Section */}
+              {count > 0 && (
+                <div className="mt-14 pt-8 border-t border-neutral-200 flex flex-col items-center gap-6">
+                  {/* Progress Indicator */}
+                  <div className="flex flex-col items-center gap-2 w-full max-w-xs text-center">
+                    <p className="text-xs text-neutral-500">
+                      Showing <span className="font-semibold text-ink">{displayedProducts.length}</span> of{" "}
+                      <span className="font-semibold text-ink">{count}</span> products
+                    </p>
+                    <div className="w-full h-1.5 bg-neutral-100 rounded-full overflow-hidden border border-neutral-200">
+                      <div
+                        className="h-full bg-ink transition-all duration-300 rounded-full"
+                        style={{ width: `${Math.min(100, (displayedProducts.length / count) * 100)}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* View More Button */}
+                  {displayedProducts.length < count && (
+                    <button
+                      onClick={handleViewMore}
+                      disabled={loadingMore}
+                      className="px-8 py-3.5 bg-ink text-white text-xs font-semibold tracking-wider uppercase rounded-sm hover:bg-neutral-800 transition-all flex items-center gap-2 shadow-sm disabled:opacity-50 hover:shadow"
+                    >
+                      {loadingMore ? (
+                        <>
+                          <Loader2 size={15} className="animate-spin" />
+                          <span>Loading more products...</span>
+                        </>
+                      ) : (
+                        <span>View More Products</span>
+                      )}
+                    </button>
+                  )}
+
+                  {/* Numbered Pagination */}
+                  {totalPages > 1 && (
+                    <div className="flex items-center gap-1 sm:gap-1.5 flex-wrap justify-center mt-2">
+                      <button
+                        onClick={() => handlePageChange(page - 1)}
+                        disabled={page <= 1 || loadingMore}
+                        className="px-3 py-2 border border-neutral-300 rounded-sm hover:border-ink disabled:opacity-30 disabled:hover:border-neutral-300 transition text-xs flex items-center gap-1 bg-white font-medium"
+                        aria-label="Previous page"
+                      >
+                        <ChevronLeft size={14} />
+                        <span className="hidden sm:inline">Prev</span>
+                      </button>
+
+                      {getPageNumbers().map((pNum, idx) =>
+                        typeof pNum === "number" ? (
+                          <button
+                            key={idx}
+                            onClick={() => handlePageChange(pNum)}
+                            disabled={loadingMore}
+                            className={`w-8 h-8 sm:w-9 sm:h-9 text-xs font-medium rounded-sm border transition ${
+                              pNum === page
+                                ? "bg-ink border-ink text-white"
+                                : "border-neutral-200 hover:border-ink text-neutral-700 bg-white"
+                            }`}
+                          >
+                            {pNum}
+                          </button>
+                        ) : (
+                          <span key={idx} className="px-1.5 text-xs text-neutral-400 select-none">
+                            ...
+                          </span>
+                        )
+                      )}
+
+                      <button
+                        onClick={() => handlePageChange(page + 1)}
+                        disabled={page >= totalPages || loadingMore}
+                        className="px-3 py-2 border border-neutral-300 rounded-sm hover:border-ink disabled:opacity-30 disabled:hover:border-neutral-300 transition text-xs flex items-center gap-1 bg-white font-medium"
+                        aria-label="Next page"
+                      >
+                        <span className="hidden sm:inline">Next</span>
+                        <ChevronRight size={14} />
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>

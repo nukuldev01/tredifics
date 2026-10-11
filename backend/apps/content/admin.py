@@ -66,10 +66,22 @@ class BannerAdmin(admin.ModelAdmin):
 @admin.register(Reel)
 class ReelAdmin(admin.ModelAdmin):
     list_display = ("thumb", "title", "creator_handle", "embed_url",
-                    "sort_order", "is_active")
+                    "has_video_file", "sort_order", "is_active")
     list_editable = ("sort_order", "is_active")
     list_filter = ("is_active",)
     search_fields = ("title", "embed_url", "creator_handle")
+    fieldsets = (
+        ("Reel Info", {
+            "fields": ("title", "creator_handle", "sort_order", "is_active"),
+        }),
+        ("Video Source (Use either Video File or Embed URL)", {
+            "fields": ("video_file", "embed_url"),
+            "description": "Recommended: Upload an MP4 video file directly for 100% reliable, fast playback without Instagram iframe blocks. Alternatively, paste a public Instagram Reel or YouTube Shorts URL.",
+        }),
+        ("Thumbnail", {
+            "fields": ("thumbnail", "thumbnail_url"),
+        }),
+    )
 
     def thumb(self, obj):
         url = obj.thumb_src()
@@ -79,6 +91,11 @@ class ReelAdmin(admin.ModelAdmin):
                 'object-fit:cover;border-radius:4px;" />', url
             )
         return "—"
+
+    def has_video_file(self, obj):
+        return bool(obj.video_file)
+    has_video_file.boolean = True
+    has_video_file.short_description = "Uploaded MP4?"
 
 
 @admin.register(PopupReview)
