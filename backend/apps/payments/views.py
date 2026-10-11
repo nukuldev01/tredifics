@@ -17,6 +17,13 @@ from apps.orders.services import mark_order_paid, send_order_confirmation
 from .models import PaymentEvent
 
 
+def _safe_payload(data: dict) -> dict:
+    """Return a copy of data with UUID values converted to str so
+    PostgreSQL JSONField can serialize them without TypeError."""
+    import uuid
+    return {k: str(v) if isinstance(v, uuid.UUID) else v for k, v in data.items()}
+
+
 def _client():
     return razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
 
@@ -97,7 +104,7 @@ class VerifyPaymentView(APIView):
                 order=order, event=PaymentEvent.EVENT_VERIFY_FAILED,
                 razorpay_order_id=data["razorpay_order_id"],
                 razorpay_payment_id=data["razorpay_payment_id"],
-                payload=data,
+                payload=_safe_payload(data),
             )
             return Response(
                 {"detail": "Payment does not match this order"},
@@ -113,7 +120,7 @@ class VerifyPaymentView(APIView):
                 order=order, event=PaymentEvent.EVENT_VERIFY_FAILED,
                 razorpay_order_id=data["razorpay_order_id"],
                 razorpay_payment_id=data["razorpay_payment_id"],
-                payload=data,
+                payload=_safe_payload(data),
             )
             return Response({"detail": "Signature mismatch"}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -124,7 +131,7 @@ class VerifyPaymentView(APIView):
             order=order, event=PaymentEvent.EVENT_VERIFIED,
             razorpay_order_id=data["razorpay_order_id"],
             razorpay_payment_id=data["razorpay_payment_id"],
-            payload=data,
+            payload=_safe_payload(data),
         )
 
         if paid is not None:
